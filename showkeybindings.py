@@ -30,6 +30,7 @@ GTK_CSS_STRING =b"""
     font-weight:    bold; 
     padding-top:    16px;
     padding-bottom: 16px;
+    border:         2px solid black;
 }
 #QuitButton {
     background:  #fdfdfd;
@@ -74,10 +75,34 @@ class KeybindingCollector(object):
         specs = []
         settings = Gio.Settings.new(schema)
         for action in settings.keys():
-            if settings.get_value(action).is_of_type(self._keybinding_type):
+            # Handle custom keybindings specially.
+            if action == 'custom-list':
+                custom_keys = settings.get_strv(action)
+                if custom_keys:
+                    specs += self._GetSpecsForCustomBindingSchema(schema,
+                                                                  custom_keys)
+            elif settings.get_value(action).is_of_type(self._keybinding_type):
                 keybindings = settings.get_strv(action)
                 if keybindings:
                     specs += [self._BuildSpec(schema, action, binding)
+                              for binding in keybindings if binding]
+        return specs
+
+    def _GetSpecsForCustomBindingSchema(self, schema, custom_keys):
+        """Special case for Cinnamon custom binding schemas."""
+        specs = []
+        custom_schema = schema + '.custom-keybinding'
+        custom_path = '/' + custom_schema.replace('.', '/') + 's/'
+        for key in custom_keys:
+            path = custom_path + key + '/'
+            settings = Gio.Settings.new_with_path(custom_schema, path)
+            keys = settings.keys()
+            if ('name' in keys and 'binding' in keys and
+                settings.get_value('binding').is_of_type(self._keybinding_type)):
+                action = settings.get_string('name')
+                keybindings = settings.get_strv('binding')
+                if keybindings:
+                    specs += [self._BuildSpec(custom_schema, action, binding)
                               for binding in keybindings if binding]
         return specs
 

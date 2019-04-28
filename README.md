@@ -1,8 +1,8 @@
 # Showkeybindings
 
 Showkeybindings is a Python script that displays a Gtk window showing all
-keybindings specified in the Gnome gsettings configuration. The bindings can be
-sorted by any column and are searchable.
+keybindings (aka keyboard shortcuts) specified in the Gnome gsettings
+configuration. The bindings can be sorted by any column and are searchable.
 
 ## Dependencies
 
